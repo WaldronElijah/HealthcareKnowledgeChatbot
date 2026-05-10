@@ -4,6 +4,7 @@ import json
 import re
 from pathlib import Path
 from typing import Iterable
+from urllib.parse import urldefrag, urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -82,6 +83,34 @@ def scrape_url(url: str) -> Document:
     )
 
 
+def same_site_links(html: str, base_url: str, limit: int) -> list[str]:
+    soup = BeautifulSoup(html, "html.parser")
+    base_host = urlparse(base_url).netloc
+    links: list[str] = []
+    seen = {base_url}
+
+    for anchor in soup.select("a[href]"):
+        href = anchor.get("href", "").strip()
+        if not href or href.startswith(("mailto:", "tel:", "javascript:")):
+            continue
+
+        absolute_url = urldefrag(urljoin(base_url, href)).url
+        parsed = urlparse(absolute_url)
+        if parsed.scheme not in {"http", "https"}:
+            continue
+        if parsed.netloc != base_host:
+            continue
+        if absolute_url in seen:
+            continue
+
+        seen.add(absolute_url)
+        links.append(absolute_url)
+        if len(links) >= limit:
+            break
+
+    return links
+
+
 def scrape_urls(urls: Iterable[str]) -> list[Document]:
     documents: list[Document] = []
 
@@ -89,6 +118,47 @@ def scrape_urls(urls: Iterable[str]) -> list[Document]:
         document = scrape_url(url)
         if document.page_content:
             documents.append(document)
+
+    return documents
+
+
+def scrape_sources(
+    sources: Iterable[dict],
+    include_child_pages: bool = False,
+    max_child_pages_per_source: int = 5,
+) -> list[Document]:
+    documents: list[Document] = []
+    scraped_urls: set[str] = set()
+
+    for source in sources:
+        url = source["url"]
+        urls_to_scrape = [url]
+
+        if include_child_pages and max_child_pages_per_source > 0:
+            html = fetch_html(url)
+            urls_to_scrape.extend(
+                same_site_links(html, url, limit=max_child_pages_per_source)
+            )
+
+        for scrape_target in urls_to_scrape:
+            if scrape_target in scraped_urls:
+                continue
+
+            document = scrape_url(scrape_target)
+            if not document.page_content:
+                continue
+
+            document.metadata.update(
+                {
+                    "index_source": url,
+                    "index_name": source["name"],
+                    "type": source["type"],
+                    "source_owner": source["source_owner"],
+                    "priority": source["priority"],
+                }
+            )
+            documents.append(document)
+            scraped_urls.add(scrape_target)
 
     return documents
 
