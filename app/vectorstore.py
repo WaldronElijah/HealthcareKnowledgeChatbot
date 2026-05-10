@@ -7,6 +7,16 @@ from app.config import settings
 from app.models import get_embeddings
 
 
+def qdrant_client_kwargs() -> dict:
+    if settings.qdrant_url:
+        kwargs = {"url": settings.qdrant_url}
+        if settings.qdrant_api_key:
+            kwargs["api_key"] = settings.qdrant_api_key
+        return kwargs
+
+    return {"path": settings.qdrant_path}
+
+
 def load_documents_jsonl(input_path: str | Path):
     from langchain_core.documents import Document
 
@@ -45,7 +55,7 @@ def build_vectorstore(input_path: str | Path | None = None, recreate: bool = Tru
     documents = load_documents_jsonl(source_path)
     chunks = split_documents(documents)
 
-    client = QdrantClient(path=settings.qdrant_path)
+    client = QdrantClient(**qdrant_client_kwargs())
     if recreate and client.collection_exists(settings.qdrant_collection):
         client.delete_collection(settings.qdrant_collection)
     client.close()
@@ -53,7 +63,7 @@ def build_vectorstore(input_path: str | Path | None = None, recreate: bool = Tru
     QdrantVectorStore.from_documents(
         chunks,
         embedding=get_embeddings(),
-        path=settings.qdrant_path,
+        **qdrant_client_kwargs(),
         collection_name=settings.qdrant_collection,
     )
 
@@ -65,6 +75,6 @@ def get_vectorstore():
 
     return QdrantVectorStore.from_existing_collection(
         embedding=get_embeddings(),
-        path=settings.qdrant_path,
+        **qdrant_client_kwargs(),
         collection_name=settings.qdrant_collection,
     )

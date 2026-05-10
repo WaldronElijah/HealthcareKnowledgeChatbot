@@ -15,6 +15,8 @@ class Settings:
         "SCRAPED_DATA_PATH", "data/scraped/healthcare_pages.jsonl"
     )
     qdrant_path: str = os.getenv("QDRANT_PATH", "qdrant_db")
+    qdrant_url: str | None = os.getenv("QDRANT_URL")
+    qdrant_api_key: str | None = os.getenv("QDRANT_API_KEY")
     qdrant_collection: str = os.getenv("QDRANT_COLLECTION", "healthcare_knowledge")
     llm_provider: str = os.getenv("LLM_PROVIDER", "openai")
     embedding_provider: str = os.getenv("EMBEDDING_PROVIDER", "openai")

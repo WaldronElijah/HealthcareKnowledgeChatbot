@@ -9,5 +9,15 @@ wheels/
 # Virtual environments
 .venv
 
-#enviorment variables
+# Environment variables
 .env
+
+# Local vector database and generated scrape output
+qdrant_db/
+qdrant_storage/
+data/scraped/
+
+# Local editor and OS files
+.idea/
+.vscode/
+.DS_Store
