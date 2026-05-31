@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Iterable
 from urllib.parse import urldefrag, urljoin, urlparse
@@ -115,7 +116,12 @@ def scrape_urls(urls: Iterable[str]) -> list[Document]:
     documents: list[Document] = []
 
     for url in urls:
-        document = scrape_url(url)
+        try:
+            document = scrape_url(url)
+        except requests.RequestException as error:
+            print(f"Skipping {url}: {error}", file=sys.stderr)
+            continue
+
         if document.page_content:
             documents.append(document)
 
@@ -144,7 +150,12 @@ def scrape_sources(
             if scrape_target in scraped_urls:
                 continue
 
-            document = scrape_url(scrape_target)
+            try:
+                document = scrape_url(scrape_target)
+            except requests.RequestException as error:
+                print(f"Skipping {scrape_target}: {error}", file=sys.stderr)
+                continue
+
             if not document.page_content:
                 continue
 
