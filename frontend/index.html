@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Diabetes Knowledge Chatbot</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="intro">
+        <p class="eyebrow">Healthcare RAG demo</p>
+        <h1>Diabetes Knowledge Chatbot</h1>
+        <p class="description">
+          Ask questions about diabetes using a focused set of trusted healthcare
+          sources. The assistant retrieves relevant source text first, then
+          answers in natural language with source links below.
+        </p>
+      </section>
+
+      <section class="chat-panel" aria-label="Ask a diabetes question">
+        <form id="question-form" class="question-form">
+          <label for="question-input">Ask a question</label>
+          <textarea
+            id="question-input"
+            name="question"
+            rows="4"
+            placeholder="Example: What are common symptoms of diabetes?"
+            required
+          ></textarea>
+          <div class="actions">
+            <button id="submit-button" type="submit">Ask question</button>
+          </div>
+        </form>
+
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+
+        <section id="answer-card" class="answer-card" hidden>
+          <h2>Answer</h2>
+          <div id="answer-text" class="answer-text"></div>
+
+          <div class="sources-block">
+            <h3>Sources</h3>
+            <ul id="sources-list"></ul>
+          </div>
+
+          <button id="reset-button" class="secondary-button" type="button">
+            Ask another question
+          </button>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
